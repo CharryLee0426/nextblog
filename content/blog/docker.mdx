@@ -1,0 +1,177 @@
+---
+title: Docker Summary for Basic Usage
+date: 2023-07-03
+cover_image: /img/000001.png
+cover_image_alt: About Comments
+categories: Docker
+tags:
+  - tutorial
+---
+
+# Docker Summary for Basic Usage
+
+## 1. What is Docker?
+
+Docker is not only a name of a company, but also a name of a technology. Docker is a containerization platform. It is used to build, ship, and run applications by using containers. Containers are isolated environments that contain everything an application needs to run. Therefore, Docker is a tool that can help us to build, ship, and run applications in containers.
+
+Why do we need containers?
+
+TL;DR Containers are lightweight, portable, and isolated. They help us to deploy and run applications in a more efficient way.
+For example, if we want to run a web application on different servers, we need to install the same environment on each server.
+It's hard to solve environment problem if we just share the code of the application. However, if we use containers, we can just share the container image of the application. Then we can run the application on different servers without worrying about the environment problem.
+
+## 2. How to install Docker?
+
+Docker can run on all major operating systems, althought it is based on Linux kernel. For macOS and Windows users, we can install Docker Desktop. For Linux users, we can install Docker Engine.
+
+After installing Docker, we can use `docker version` to check whether Docker is installed successfully. If it is installed successfully, we can see the version of Docker Client and Docker Server.
+
+```
+docker version
+
+Client:
+ Cloud integration: v1.0.35-desktop+001
+ Version:           24.0.5
+ API version:       1.43
+ Go version:        go1.20.6
+ Git commit:        ced0996
+ Built:             Fri Jul 21 20:32:30 2023
+ OS/Arch:           darwin/arm64
+ Context:           desktop-linux
+
+Server: Docker Desktop 4.22.1 (118664)
+ Engine:
+  Version:          24.0.5
+  API version:      1.43 (minimum version 1.12)
+  Go version:       go1.20.6
+  Git commit:       a61e2b4
+  Built:            Fri Jul 21 20:35:38 2023
+  OS/Arch:          linux/arm64
+  Experimental:     false
+ containerd:
+  Version:          1.6.21
+  GitCommit:        3dce8eb055cbb6872793272b4f20ed16117344f8
+ runc:
+  Version:          1.1.7
+  GitCommit:        v1.1.7-0-g860f061
+ docker-init:
+  Version:          0.19.0
+  GitCommit:        de40ad0
+```
+
+In fact, docker for macOS or for Windows runs on a Linux virtual machine. We can see the docker server's OS/Arch is always `linux/arm64` or `linux/amd64`.
+
+## 3. Docker Basic Commands
+
+To run a container from docker hub, a public docker image registry. We can use this command:
+
+```
+docker run -d -p 27017:27017 \ 
+-e MONGO_INITDB_ROOT_USERNAME=admin \
+ -e MONGO_INITDB_ROOT_PASSWORD=password \
+  --name mongodb --net mongo-network mongo    
+```
+
+`docker` run is used to run a container from an image. `-d` means run the container in background.
+The terminal will be blocked if there is no `-d` flag.
+`-p` is used to map the port of the container to the port of the host. `-p 8000:4000` means that
+we can access the container's port 4000 by using host's port 8000. `4000` is used by application running in container.
+`-e` is used to set environment variables. It's easy to look at docker hub profile to know how to config environment variables.
+`--name` is used to set the name of the container. It is recommanded to set the name of the container in order to track the container easily.
+`--net` is used to set the network of the container. We can create a network by using `docker network create` command.
+`mongo` is the name of the image. We can use `docker pull` command to pull the image from docker hub.
+If we don't have the image in local, docker will pull the image from docker hub automatically.
+
+```
+docker network create mongo-network
+```
+
+This command is used to create a network named `mongo-network`.
+
+Docker network is used to connect containers. Containers in the same network can communicate with each other by using container's name as host name. I used to deploy `mongo`, a dbms, and `mongo-express`, a ui client, in the same network
+so that `mongo-express` can connect to `mongo` by using `mongo` as host name.
+
+```
+docker-compose -f docker-compose.yaml up/down
+```
+
+This command is used to start/stop a compose. Docker compose is used to deploy multiple containers at once. By default, all
+services in a docker compose share the same docker network. So we don't need to create a network manually.
+
+```
+docker run -v name:container_path
+```
+
+This command is used to mount a volume to a container. Docker volume is used to store data. The data in containers will be lost
+when the container is restarted. However, the data in volumes will not be lost. We can mount a volume to a container to persist data.
+
+It is recommended to use `name:container_path` to give a name to the volume. In most cases, we don't need to declare where we store the volume locally. Docker can manage the volume for us.
+
+`docker ps` is used to look at all running containers. `docker exec -it container_id` is used to enter the container.
+
+## 4. Dockerfile
+
+Dockerfile tells docker how to build an image from scratch. We can create our images to wrap our applications by using Dockerfile.
+
+Here is an example.
+
+```Dockerfile
+FROM node:13-alpine
+
+ENV MONGO_DB_USERNAME=admin \
+    MONGO_DB_PWD=password
+
+RUN mkdir -p /home/app
+
+COPY ./app /home/app
+
+# set default dir so that next commands executes in /home/app dir
+WORKDIR /home/app
+
+# will execute npm install in /home/app because of WORKDIR
+RUN npm install
+
+# no need for /home/app/server.js because of WORKDIR
+CMD ["node", "server.js"]
+
+```
+
+`FROM` is used to set the base image. `ENV` is used to set environment variables. `RUN` is used to run commands. `COPY` is used to copy files from host to container. `WORKDIR` is used to set the default directory, very like `cd` in linux. `CMD` is used to set the default command.
+
+## 5. Docker Compose
+
+Docker compose should be defined by a `.yaml` file. Here is an example.
+
+```yaml
+version: '3'
+services:
+  # my-app:
+  # image: ${docker-registry}/my-app:1.0
+  # ports:
+  # - 3000:3000
+  mongodb:
+    image: mongo
+    ports:
+      - 27017:27017
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+    volumes:
+      - mongo-data:/data/db
+  mongo-express:
+    image: mongo-express
+    restart: always # fixes MongoNetworkError when mongodb is not ready when mongo-express starts
+    ports:
+      - 8080:8081
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=password
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+volumes:
+  mongo-data:
+    driver: local
+```
+
+## 6. What's more
+
+After learning this low-level container technology, developers should learn kubernates. It is a high-level container technology. It is used to manage clusters, which contain many containers.
