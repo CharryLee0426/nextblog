@@ -4,9 +4,9 @@ export const siteConfig = {
     description: "Chen's Blog using NextJS",
     author: "Chen Li",
     links: {
-        x: "",
-        github: "",
-        personalSite: ""
+        x: "https://twitter.com/CharryLee426",
+        github: "https://github.com/CharryLee0426",
+        personalSite: "https://chenli.dev"
     },
 }
 
