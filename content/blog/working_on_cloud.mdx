@@ -1,0 +1,81 @@
+---
+title: Working on Cloud
+date: 2024-06-11
+cover_image: /img/000001.png
+cover_image_alt: About Comments
+categories: Cloud
+tags:
+  - guidence
+---
+
+## Introduction
+We use lots of local softwares for our work in China. And our software engineer is super trash. Every big giants have
+their own account systems which are not connected each other. What's more, there are lots of limitations and ads in online softwares.
+So we prefer to use local softwares. However, when I come to the US and then started an on-campus job, I realized that working on Cloud
+is super popular in the US. I found that almost everyone uses Google Docs for documents and some cheap clouds such as Google Drive and iCloud.
+So I want to migrate my daily workflow to cloud in order to adjust to US customs.
+
+So my tasks will be:
+1. Notion for daily work management;
+2. Google softwares/draw.io/figma to replace daily document work;
+3. Overleaf for daily latex for research;
+4. Postman for API testing;
+5. Google IDX/Google Colab/Kaggle Notebook for online Machine Learning development;
+6. Self-host code-server for personal projects which require heavy computation resource.
+
+## Tech Stack
+As the introduction shown, we will use some marcket-tested products and some opensource projects to do that.
+What I need is:
+1. Google;
+2. Draw.io;
+3. Figma;
+4. Notion;
+5. Postman;
+6. Kaggle;
+7. Overleaf;
+8. Tailscale;
+9. Code-server.
+
+## Deploying Server
+It's not easy to deploy a server, especially no public Ip. But I found that Tailscale is a good software that
+you can build your own network based on VPN and no speed limit.
+
+Here is the start command:
+```bash
+echo "(1/3) Starting tailscale..."
+sudo -b tailscale up
+echo "(1/3) Tailscale connected."
+echo "(2/3) Starting Code Server..."
+sudo systemctl start code-server@$USER
+echo "(2/3) Code Server service deployed..."
+echo "(3/3) Setup tailscale funnel..."
+sudo -b tailscale funnel 8080
+echo "(3/3) Tailscale funnel service started on 8080."
+echo "All done."
+```
+
+What you need to do is to set your windows never sleep.
+
+For code-server, you need to set a proxy in `next.config.mjs` to debug nextjs/react projects.
+
+```javascript
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+    // used if wanna debugging via code server
+    // https://github.com/coder/code-server/issues/5831
+    basePath: "/absproxy/3000"
+};
+
+export default nextConfig;
+```
+
+## Working on Cloud
+
+Working on Google drive is super seamlessly. Draw.io and Notion are also very good for use.
+However, you need some time to study how to use Notion if you don't have any concept about it.
+In short, Notion is a beautiful relational database but without SQL.
+
+## Conclusion
+
+In this guidence, A whole process and Working on cloud solution were introduced. Working on cloud will
+be very productive and efficient. It's good for my internship, too.
